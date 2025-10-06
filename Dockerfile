@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y \
 # Upgrade pip
 RUN pip install --no-cache-dir --upgrade pip
 
+# Install tensorflow
+RUN pip install tensorflow
 
 # Install PyTorch 2.3.1 with CUDA 12.1 support
 RUN pip install --no-cache-dir torch==2.3.1 torchvision==0.18.1 torchaudio==2.3.1 \
