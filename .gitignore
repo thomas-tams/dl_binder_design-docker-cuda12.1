@@ -1,0 +1,49 @@
+# Input/Output directories
+input/
+inputs/
+output/
+outputs/
+test_*/
+
+# Docker build cache
+.dockerignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Logs
+*.log
+
+# AlphaFold/PyRosetta specific
+*.pdb
+*.cif
+*.silent
+*.pickle
+*.a3m
+*.m8
+alphafold_params/
+alphafold_data/
+
+# Except example files
+!examples/*.pdb
+!examples/*.silent
