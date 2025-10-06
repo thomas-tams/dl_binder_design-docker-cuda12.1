@@ -1,5 +1,5 @@
 #!/bin/bash
-# Example script to run af2_initial_guess prediction
+# Example script to run dl-binder-design-docker-cuda12.1 prediction
 # Usage: ./run_example.sh <pdb_directory>
 
 set -e
@@ -12,7 +12,8 @@ if [ $# -eq 0 ]; then
 fi
 
 INPUT_DIR=$1
-OUTPUT_DIR="./output"
+OUTPUT_DIR="./output_predict"
+AF2_PARAMS="./test_params"
 
 # Verify input directory exists
 if [ ! -d "$INPUT_DIR" ]; then
@@ -23,16 +24,17 @@ fi
 # Create output directory if it doesn't exist
 mkdir -p "$OUTPUT_DIR"
 
-echo "Running af2_initial_guess on: $INPUT_DIR"
+echo "Running dl-binder-design-docker-cuda12.1 predict.py on: $INPUT_DIR"
 echo "Output will be saved to: $OUTPUT_DIR"
 
-docker run --gpus all \
+docker run --gpus all --rm \
   -v "$(realpath $INPUT_DIR)":/app/input \
   -v "$(realpath $OUTPUT_DIR)":/app/output \
-  af2_initial_guess-docker-cuda12.1 \
-  python predict.py \
+  -v "$(realpath $AF2_PARAMS)":/app/dl_binder_design/af2_initial_guess/model_weights/params \
+  dl-binder-design-docker-cuda12.1 \
+  predict.py \
     -pdbdir /app/input \
     -recycle 3 \
-    -out /app/output
+    -outpdbdir /app/output
 
 echo "Done! Check $OUTPUT_DIR for results."
