@@ -31,7 +31,7 @@ docker run --gpus all --rm \
   -v "$(realpath $INPUT_DIR)":/app/input \
   -v "$(realpath $OUTPUT_DIR)":/app/output \
   -v "$(realpath $AF2_PARAMS)":/app/dl_binder_design/af2_initial_guess/model_weights/params \
-  dl-binder-design-docker-cuda12.1 \
+  ghcr.io/thomas-tams/dl_binder_design-docker-cuda12.1 \
   predict.py \
     -pdbdir /app/input \
     -recycle 3 \

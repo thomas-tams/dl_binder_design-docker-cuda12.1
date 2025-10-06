@@ -30,7 +30,7 @@ echo "Output will be saved to: $OUTPUT_DIR"
 docker run --gpus all --rm \
   -v "$(realpath $INPUT_DIR)":/app/input \
   -v "$(realpath $OUTPUT_DIR)":/app/output \
-  dl-binder-design-docker-cuda12.1 \
+  ghcr.io/thomas-tams/dl_binder_design-docker-cuda12.1 \
   dl_interface_design.py \
     -pdbdir /app/input \
     -seqs_per_struct 3 \

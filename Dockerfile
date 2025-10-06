@@ -1,3 +1,6 @@
+# syntax=docker/dockerfile:1.7-labs
+# IMPORTANT: This line MUST be first to enable --exclude in COPY commands
+
 # =============================================================================
 # Stage 1: Builder - Install dependencies and clone repositories
 # =============================================================================
@@ -85,16 +88,59 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-# Copy Python packages from builder
-COPY --from=builder /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
+# Copy Python packages from builder in separate layers to avoid 10GB+ layer size limit
+# Split the 10.5GB dist-packages into multiple layers
+# Strategy: Copy large packages individually, then copy everything else
+
+# Copy Python packages in separate layers to avoid 10GB layer limit
+# Only copy what exists - some packages may be subdirectories of others
+
+# Layer 1: NVIDIA libraries (~3GB)
+COPY --from=builder /usr/local/lib/python3.10/dist-packages/nvidia /usr/local/lib/python3.10/dist-packages/nvidia
+
+# Layer 2: PyRosetta package (~3GB)
+COPY --from=builder /usr/local/lib/python3.10/dist-packages/pyrosetta /usr/local/lib/python3.10/dist-packages/pyrosetta
+
+# Layer 3: PyTorch (~1.6GB)
+COPY --from=builder /usr/local/lib/python3.10/dist-packages/torch /usr/local/lib/python3.10/dist-packages/torch
+
+# Layer 4: TensorFlow (~1.3GB)
+COPY --from=builder /usr/local/lib/python3.10/dist-packages/tensorflow /usr/local/lib/python3.10/dist-packages/tensorflow
+
+# Layer 5: triton (420MB)
+COPY --from=builder /usr/local/lib/python3.10/dist-packages/triton /usr/local/lib/python3.10/dist-packages/triton
+
+# Layer 6: jaxlib (292MB)
+COPY --from=builder /usr/local/lib/python3.10/dist-packages/jaxlib /usr/local/lib/python3.10/dist-packages/jaxlib
+
+# Layer 7: scipy (120MB)
+COPY --from=builder /usr/local/lib/python3.10/dist-packages/scipy /usr/local/lib/python3.10/dist-packages/scipy
+
+# Layer 8: All remaining packages using --exclude (~2-3GB)
+# Exclude the large packages already copied above
+COPY --exclude=nvidia \
+     --exclude=pyrosetta \
+     --exclude=torch \
+     --exclude=tensorflow \
+     --exclude=triton \
+     --exclude=jaxlib \
+     --exclude=scipy \
+     --from=builder /usr/local/lib/python3.10/dist-packages /usr/local/lib/python3.10/dist-packages
+
+# Copy binaries
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # Copy application files from builder
 COPY --from=builder /app /app
 
 # Set environment variables
-ENV PYTHONPATH="/app/dl_binder_design/af2_initial_guess:/app/dl_binder_design/mpnn_fr:${PYTHONPATH}"
+ENV PYTHONPATH="/app/dl_binder_design/af2_initial_guess:/app/dl_binder_design/mpnn_fr"
 ENV PATH="/app/dl_binder_design/af2_initial_guess:/app/dl_binder_design/mpnn_fr:/app/dl_binder_design/include/silent_tools:${PATH}"
+
+# Add labels to link container to repository
+LABEL org.opencontainers.image.source=https://github.com/thomas-tams/dl_binder_design-docker-cuda12.1
+LABEL org.opencontainers.image.description="Deep Learning Binder Design with CUDA 12.1 support"
+LABEL org.opencontainers.image.licenses=MIT
 
 # Set working directory
 WORKDIR /app/dl_binder_design/af2_initial_guess
